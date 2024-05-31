@@ -110,16 +110,31 @@
 
     // Usage example
     const columns = [
-      {header: 'ID', field: 'id'},
-      {header: 'Name', field: 'name'},
-      {header: 'Type', field: 'type'},
-      {header: 'Distance', field: 'distance'},
-      {header: 'Discovered By', field: 'discoveredBy'},
-      {header: 'Notable Feature', field: 'notableFeature'}
+      {label: 'ID', key: 'id'},
+      {label: 'Name', key: 'name'},
+      {label: 'Type', key: 'type'},
+      {label: 'Distance', key: 'distance'},
+      {label: 'Discovered By', key: 'discoveredBy'},
+      {
+        label: 'Notable Feature', key: 'notableFeature', cell(row) {
+          return `<button class="btn btn--small btn--transparent" data-delete=${row.id}>${row.id}</button>`;
+        }
+      }
     ];
 
+
     const tableContainer = document.getElementById('table-container');
-    const dataTable = new DataTable({element: tableContainer, columns, data: spaceObjects});
+
+    function changeHandler() {
+      const deleteAttributes = tableContainer.querySelectorAll('[data-delete]');
+      console.log("delete att", deleteAttributes);
+      deleteAttributes.forEach(function (button) {
+        button.addEventListener('click', function () {
+          alert('delete ' + button.dataset.delete);
+        });
+      });
+    }
+    const dataTable = new DataTable({element: tableContainer, columns, data: spaceObjects, changeHandlers:changeHandler});
   </script>
 </body>
 

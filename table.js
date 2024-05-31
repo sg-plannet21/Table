@@ -20,7 +20,7 @@ function range(low, high) {
 
 
 class DataTable {
-  constructor({ element, data = [], columns = [], showSearch = data.length, pageSize = 3, sortColumn = { field: columns[0].field, order: "asc" } }) {
+  constructor({ element, changeHandlers, data = [], columns = [], showSearch = data.length, pageSize = 3, sortColumn = { key: columns[0].key, order: "asc" } }) {
     if (!element) {
       throw new Error("Element not provided!");
     }
@@ -32,12 +32,10 @@ class DataTable {
     this.columns = columns;
     this.currentPage = 1;
     this.pageSize = pageSize;
-
     this.sortColumn = sortColumn;
-
     this.showSearch = showSearch;
+    this.changeHandlers = changeHandlers;
 
-    //    this.init();
     this.initData();
     this.renderPage();
     this.render();
@@ -64,8 +62,8 @@ class DataTable {
           this.filtered = this.data.filter((entry) => {
             for (let i = 0; i < this.columns.length; i++) {
               if (!this.columns[i].ignoreFiltering) {
-                const field = String(entry[this.columns[i].field]).toLowerCase();
-                if (field.indexOf(searchTerm) !== -1) return true;
+                const key = String(entry[this.columns[i].key]).toLowerCase();
+                if (key.indexOf(searchTerm) !== -1) return true;
               }
             }
           });
@@ -92,6 +90,7 @@ class DataTable {
       this.paginate();
       this.renderTable();
       this.renderPagination();
+      if (this.changeHandlers) { console.log("setting handlerrs"); this.changeHandlers(); }
     } else {
       this.renderNoEntries();
       this.element.querySelector(".pagination-container").innerHTML = "";
@@ -104,21 +103,21 @@ class DataTable {
   initData(tableData = this.data) {
     this.data = tableData;
     this.sortData();
-    this.filtered = this.data.slice();
   }
 
   /**
-  * Sort the data based on the sort column's field and order
+  * Sort the data based on the sort column's key and order
   */
   sortData() {
-    const field = this.sortColumn.field;
+    const key = this.sortColumn.key;
     const order = this.sortColumn.order;
     this.data.sort(function(a, b) {
       if (order === "asc")
-        return (a[field] > b[field]) - (a[field] < b[field]);
+        return (a[key] > b[key]) - (a[key] < b[key]);
 
-      return (b[field] > a[field]) - (b[field] < a[field]);
+      return (b[key] > a[key]) - (b[key] < a[key]);
     });
+    this.filtered = this.data.slice();
   }
 
   /**
@@ -137,19 +136,19 @@ class DataTable {
     this.columns.forEach(column => {
       const th = document.createElement('th');
       th.scope = "column";
-      th.textContent = column.header;
+      th.textContent = column.label;
       if (!column.ignoreFiltering) {
-        if (this.sortColumn.field === column.field) {
+        if (this.sortColumn.key === column.key) {
           th.dataset.sort = this.sortColumn.order;
         } else {
           th.dataset.sort = "";
         }
 
         th.addEventListener("click", () => {
-          if (this.sortColumn.field === column.field) {
+          if (this.sortColumn.key === column.key) {
             this.sortColumn.order = this.sortColumn.order === "asc" ? "desc" : "asc";
           } else {
-            this.sortColumn.field = column.field;
+            this.sortColumn.key = column.key;
             this.sortColumn.order = "asc";
           }
           this.sortData();
@@ -174,9 +173,9 @@ class DataTable {
       this.columns.forEach(column => {
         const td = document.createElement('td');
         if (column.cell) {
-          td.innerHTML = rowData.cell(row);
+          td.innerHTML = column.cell(rowData);
         } else {
-          td.textContent = rowData[column.field];
+          td.textContent = rowData[column.key];
         }
         row.appendChild(td);
       });
