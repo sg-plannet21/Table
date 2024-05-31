@@ -127,7 +127,6 @@
 
     function changeHandler() {
       const deleteAttributes = tableContainer.querySelectorAll('[data-delete]');
-      console.log("delete att", deleteAttributes);
       deleteAttributes.forEach(function (button) {
         button.addEventListener('click', function () {
           alert('delete ' + button.dataset.delete);

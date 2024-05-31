@@ -20,7 +20,7 @@ function range(low, high) {
 
 
 class DataTable {
-  constructor({ element, changeHandlers, data = [], columns = [], showSearch = data.length, pageSize = 3, sortColumn = { key: columns[0].key, order: "asc" } }) {
+  constructor({ element, changeHandlers, data = [], columns = [], showSearch = data.length, pageSize = 20, sortColumn = { key: columns[0].key, order: "asc" } }) {
     if (!element) {
       throw new Error("Element not provided!");
     }
@@ -90,7 +90,7 @@ class DataTable {
       this.paginate();
       this.renderTable();
       this.renderPagination();
-      if (this.changeHandlers) { console.log("setting handlerrs"); this.changeHandlers(); }
+      if (this.changeHandlers) { this.changeHandlers(); }
     } else {
       this.renderNoEntries();
       this.element.querySelector(".pagination-container").innerHTML = "";
@@ -151,6 +151,7 @@ class DataTable {
             this.sortColumn.key = column.key;
             this.sortColumn.order = "asc";
           }
+          this.currentPage = 1;
           this.sortData();
           this.render();
         });
