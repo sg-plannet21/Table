@@ -48,6 +48,8 @@ class DataTable {
     this.render();
   }
 
+
+
   /**
  * Renders the current page of data, including the search functionality and pagination controls.
  * 
@@ -72,14 +74,7 @@ class DataTable {
         const searchTerm = event.target.value.trim().toLowerCase();
         this.currentPage = 1;
         if (searchTerm) {
-          this.filtered = this.data.filter((entry) => {
-            for (let i = 0; i < this.columns.length; i++) {
-              if (!this.columns[i].ignoreFiltering) {
-                const key = String(entry[this.columns[i].key]).toLowerCase();
-                if (key.indexOf(searchTerm) !== -1) return true;
-              }
-            }
-          });
+          this.filterData(searchTerm);
         } else {
           this.filtered = this.data.slice();
         }
@@ -124,6 +119,8 @@ class DataTable {
     this.filtered = tableData;
     this.sortData();
     this.data = this.filtered.slice();
+    const searchInput = this.element.querySelector(".search-container input");
+    if (searchInput && searchInput.value) this.filterData(searchInput.value)
   }
 
   /**
@@ -140,6 +137,24 @@ class DataTable {
     });
   }
 
+  /**
+ * Filters the table data based on the provided search term.
+ * 
+ * This method iterates over the data and columns, filtering entries that match the search term.
+ * Columns with `ignoreFiltering` set to true are skipped during filtering.
+ * 
+ * @param {string} searchTerm - The term to filter the data by.
+ */
+  filterData(searchTerm) {
+    this.filtered = this.data.filter((entry) => {
+      for (let i = 0; i < this.columns.length; i++) {
+        if (!this.columns[i].ignoreFiltering) {
+          const key = String(entry[this.columns[i].key]).toLowerCase();
+          if (key.indexOf(searchTerm) !== -1) return true;
+        }
+      }
+    });
+  }
   /**
  * Paginates the filtered array based on the current page and page size.
  */
@@ -181,7 +196,7 @@ class DataTable {
             this.sortColumn.order = "asc";
           }
           this.currentPage = 1;
-        //  this.sortData();
+          this.sortData();
           this.render();
         });
       }
