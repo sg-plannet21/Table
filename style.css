@@ -200,6 +200,10 @@ input:disabled {
   text-align: right;
 }
 
+.mx-auto {
+  margin: 0 auto;
+}
+
 width-full {
   width: 100%;
 }

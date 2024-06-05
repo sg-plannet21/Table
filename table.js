@@ -1,11 +1,3 @@
-// https://github.com/accessible-components/tag-input/blob/master/build/tag-input.js
-/**
- * TagInput constructor.
- *
- * @constructor
- * @param {HTMLElement} element - Container element.
- * @param {object} options - Options.
- */
 /**
  * Generates an array of numbers within a specified range.
  *
@@ -18,8 +10,23 @@ function range(low, high) {
   return Array.from({ length: high - low }, (_, i) => i + low)
 }
 
-
+/**
+ * Class representing a data table with pagination, sorting, and optional search functionality.
+ */
 class DataTable {
+  /**
+ * Creates an instance of DataTable.
+ * 
+ * @param {Object} options - The options for the DataTable.
+ * @param {HTMLElement} options.element - The DOM element to render the data table into.
+ * @param {Array<Object>} [options.data=[]] - The data to be displayed in the table.
+ * @param {Array<Object>} [options.columns=[]] - The columns configuration for the table.
+ * @param {boolean} [options.showSearch=data.length > 0] - Whether to show the search functionality.
+ * @param {number} [options.pageSize=3] - The number of rows per page.
+ * @param {Object} [options.sortColumn={ field: columns[0]?.field, order: "asc" }] - The default column and order to sort by.
+ * 
+ * @throws {Error} Throws an error if the element is not provided.
+ */
   constructor({ element, changeHandlers, data = [], columns = [], showSearch = data.length, pageSize = 20, sortColumn = { key: columns[0].key, order: "asc" } }) {
     if (!element) {
       throw new Error("Element not provided!");
@@ -41,6 +48,12 @@ class DataTable {
     this.render();
   }
 
+  /**
+ * Renders the current page of data, including the search functionality and pagination controls.
+ * 
+ * This method creates the container for the table, search input (if enabled), and pagination controls.
+ * It also sets up the search input event listener to filter the table data based on user input.
+ */
   renderPage() {
     const container = document.createElement("div");
     container.classList.add("flow");
@@ -85,6 +98,13 @@ class DataTable {
     this.element.append(container);
   }
 
+  /** Renders the data table, including pagination and handling for no entries.
+  * 
+  * This method checks if there are filtered entries. If there are, it paginates the data,
+  * renders the table, and renders the pagination controls. If there are no entries, it
+  * displays a message indicating no entries are available and clears the pagination controls.
+  */
+
   render() {
     if (this.filtered.length) {
       this.paginate();
@@ -101,8 +121,9 @@ class DataTable {
    * Sort the table data and set the filtered (table source data)
    */
   initData(tableData = this.data) {
-    this.data = tableData;
+    this.filtered = tableData;
     this.sortData();
+    this.data = this.filtered.slice();
   }
 
   /**
@@ -111,13 +132,12 @@ class DataTable {
   sortData() {
     const key = this.sortColumn.key;
     const order = this.sortColumn.order;
-    this.data.sort(function(a, b) {
+    this.filtered.sort(function(a, b) {
       if (order === "asc")
         return (a[key] > b[key]) - (a[key] < b[key]);
 
       return (b[key] > a[key]) - (b[key] < a[key]);
     });
-    this.filtered = this.data.slice();
   }
 
   /**
@@ -128,6 +148,15 @@ class DataTable {
     this.paginated = this.filtered.slice(startIndex, startIndex + this.pageSize);
   }
 
+  /**
+* Creates and renders the table header with sortable columns.
+* 
+* This method generates the table header (`<thead>`) and its rows (`<tr>`), based on the columns configuration.
+* It sets up the column headers to be clickable for sorting the data, and applies the appropriate sort order
+* indicators based on the current sorting state.
+* 
+* @returns {HTMLElement} The constructed table header element (`<thead>`).
+*/
   renderTableHead() {
     // Create table header
     const thead = document.createElement('thead');
@@ -152,7 +181,7 @@ class DataTable {
             this.sortColumn.order = "asc";
           }
           this.currentPage = 1;
-          this.sortData();
+        //  this.sortData();
           this.render();
         });
       }
@@ -165,6 +194,15 @@ class DataTable {
     return thead;
   }
 
+  /**
+ * Creates and renders the table header with sortable columns.
+ * 
+ * This method generates the table header (`<thead>`) and its rows (`<tr>`), based on the columns configuration.
+ * It sets up the column headers to be clickable for sorting the data, and applies the appropriate sort order
+ * indicators based on the current sorting state.
+ * 
+ * @returns {HTMLElement} The constructed table header element (`<thead>`).
+ */
   renderTableBody() {
     // Create table body
     const tbody = document.createElement('tbody');
@@ -185,6 +223,12 @@ class DataTable {
     return tbody;
   }
 
+  /**
+* Renders the complete table with the table head and table body.
+* 
+* This method creates the table element, appends the table head and table body, and
+* inserts the table into the specified container within the element.
+*/
   renderTable() {
     // Create table element
     const table = document.createElement('table');
@@ -200,11 +244,26 @@ class DataTable {
     tableContainer.appendChild(table);
   }
 
-  changePage(pageNum) {
+  /**
+* Changes the current page of the table and re-renders the table.
+* 
+* This method updates the current page number and calls the render method to update the displayed table data.
+* 
+* @param {number} pageNum - The page number to switch to.
+*/
+  changeTablePage(pageNum) {
     this.currentPage = pageNum;
     this.render();
   }
 
+  /**
+* Renders the pagination controls for the table.
+* 
+* This method calculates the number of pages based on the filtered data and page size,
+* then creates and appends pagination controls, including previous/next buttons and
+* individual page buttons. It also includes a caption displaying the current range of
+* displayed items.
+*/
   renderPagination() {
     const pages = Math.ceil(this.filtered.length / this.pageSize);
     let container = this.element.querySelector(".pagination-container");
@@ -244,7 +303,7 @@ class DataTable {
       prevBtn.textContent = "<";
       prevBtn.disabled = this.currentPage === 1;
       prevBtn.classList.add("btn", "btn--small", "btn--nav");
-      prevBtn.addEventListener("click", () => { this.changePage(this.currentPage - 1); });
+      prevBtn.addEventListener("click", () => { this.changeTablePage(this.currentPage - 1); });
       nav.append(prevBtn);
 
       for (let i = 0; i < pages; i++) {
@@ -257,7 +316,7 @@ class DataTable {
           pageBtn.classList.add("active");
           pageBtn.ariaCurrent = "page";
         }
-        pageBtn.addEventListener("click", () => { this.changePage(pageNumber); });
+        pageBtn.addEventListener("click", () => { this.changeTablePage(pageNumber); });
         nav.append(pageBtn);
       }
 
@@ -265,7 +324,7 @@ class DataTable {
       nextBtn.classList.add("btn", "btn--small", "btn--nav");
       nextBtn.textContent = ">";
       nextBtn.disabled = this.currentPage === pages;
-      nextBtn.addEventListener("click", () => { this.changePage(this.currentPage + 1); });
+      nextBtn.addEventListener("click", () => { this.changeTablePage(this.currentPage + 1); });
       nav.append(nextBtn);
 
       container.append(nav);
@@ -273,6 +332,12 @@ class DataTable {
 
   }
 
+  /**
+  * Renders a message indicating that no entries were found.
+  * 
+  * This method creates a card element with an icon and a "No Entries Found" message.
+  * The card is appended to the table container element.
+  */
   renderNoEntries() {
     const container = this.element.querySelector(".table-container");
     const card = document.createElement("div");
@@ -280,10 +345,10 @@ class DataTable {
     const body = document.createElement("div");
     body.classList.add("card__body");
     body.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
-        class="icon">
-        <path stroke-linecap="round" stroke-linejoin="round"
-          d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
-      </svg>`
+     class="icon mx-auto">
+     <path stroke-linecap="round" stroke-linejoin="round"
+       d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+   </svg>`
     const heading = document.createElement("h4");
     heading.textContent = "No Entries Found";
     body.append(heading);
@@ -291,5 +356,4 @@ class DataTable {
     container.innerHTML = "";
     container.append(card);
   }
-
 }
